@@ -1,7 +1,9 @@
 package ohtu;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.io.IOException;
 import org.apache.http.client.fluent.Request;
 
@@ -15,21 +17,52 @@ public class Main {
         }
 
         String url = "http://ohtustats2017.herokuapp.com/students/"+studentNr+"/submissions";
+        String courseUrl = "https://ohtustats2017.herokuapp.com/courses/1.json";
+        
+        String submissionsText = Request.Get(url).execute().returnContent().asString();
+        String courseText = Request.Get(courseUrl).execute().returnContent().asString();
 
-        String bodyText = Request.Get(url).execute().returnContent().asString();
+        Submission[] subs = getSubmissions(submissionsText, courseText);
 
-//        System.out.println("json-muotoinen data:");
-//        System.out.println( bodyText );
+        printCourseInfo(subs);
+    }
 
-        Gson mapper = new Gson();
-        Submission[] subs = mapper.fromJson(bodyText, Submission[].class);
-        String[] weeks = bodyText.split("\"a1\":");
-        for (int i = 0; i < subs.length; i++) {
-            parseExercises(subs[i], weeks[i + 1]);
+    private static void parseExercises(Submission sub, JsonObject submission, JsonObject course) {
+        boolean[] exercisesDone = new boolean[21];
+        for (int j = 1; j < 22; j++) {
+            String key = "a" + j;
+            if (submission.get(key).isJsonNull()) {
+                break;
+            }
+            exercisesDone[j] = submission.get(key).getAsBoolean();
+        }
+        sub.setExercisesMade(exercisesDone);
+        sub.setMaxExercises(course.get("week" + sub.getWeek()).getAsInt());
+    }
+
+    private static Submission[] getSubmissions(String submissionsText, String courseText) {
+        Gson submissionMapper = new Gson();
+        Submission[] subs = submissionMapper.fromJson(submissionsText, Submission[].class);
+        
+        Gson courseMapper = new Gson();
+        Course course = courseMapper.fromJson(courseText, Course.class);
+        
+        JsonParser parser = new JsonParser();
+        JsonArray jsonArray = parser.parse(submissionsText).getAsJsonArray();
+        JsonObject courseObject = parser.parse(courseText).getAsJsonObject();
+        
+        for (int i = 0; i < jsonArray.size(); i++) {
+            Submission submission = subs[i];
+            JsonObject submissionObject = jsonArray.get(i).getAsJsonObject();
+            parseExercises(submission, submissionObject, courseObject);
+            submission.setCourse(course);
         }
         
-//        System.out.println("Oliot:");
+        return subs;
+    }
 
+    private static void printCourseInfo(Submission[] subs) {
+        System.out.println(subs[0].getCourse() + "\n");
         System.out.println("opiskelijanumero: " + subs[0].getStudent_number() + "\n");
         int exercisesMadeInTotal = 0;
         int hoursSpentInTotal = 0;
@@ -40,24 +73,5 @@ public class Main {
         }
         System.out.println("\nyhteensä: " + exercisesMadeInTotal + " tehtävää "
                             + hoursSpentInTotal + " tuntia");
-    }
-
-    private static void parseExercises(Submission sub, String week) {
-        int maxExercises = 0;
-        boolean[] exercisesDone = new boolean[21];
-        String splitString = week.split(",\"created_at\"")[0];
-        String[] exercises = splitString.split(",");
-        for (int i = 0; i < exercises.length; i++) {
-            String[] exerciseDone = exercises[i].split(":");
-            String isDone = exerciseDone[exerciseDone.length - 1];
-            if (!isDone.equals("null")) {
-                maxExercises++;
-                exercisesDone[i] = isDone.equals("true");
-            } else {
-                break;
-            }
-        }
-        sub.setExercisesMade(exercisesDone);
-        sub.setMaxExercises(maxExercises);
     }
 }

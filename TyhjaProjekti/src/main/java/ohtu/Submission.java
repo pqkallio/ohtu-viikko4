@@ -6,13 +6,30 @@ public class Submission {
     private int hours;
     private boolean[] exercisesMade;
     private int maxExercises;
+    private Course course;
     
     public String getStudent_number() {
         return student_number;
     }
 
+    public Course getCourse() {
+        return course;
+    }
+
+    public void setCourse(Course course) {
+        this.course = course;
+    }
+    
     public int getHours() {
         return hours;
+    }
+
+    public int getWeek() {
+        return week;
+    }
+    
+    public void setMaxExercises(int maxExercises) {
+        this.maxExercises = maxExercises;
     }
 
     public void setStudent_number(String student_number) {
@@ -29,10 +46,6 @@ public class Submission {
 
     public void setExercisesMade(boolean[] exercisesMade) {
         this.exercisesMade = exercisesMade;
-    }
-
-    public void setMaxExercises(int maxExercises) {
-        this.maxExercises = maxExercises;
     }
     
     public int doneExercises() {
@@ -52,13 +65,14 @@ public class Submission {
         String timeSpent = "aikaa kului " + hours + " " + hourOrHours;
         int doneExercisesN = 0;
         String doneExercisesString = "";
-        for (int i = 0; i < exercisesMade.length; i++) {
+        for (int i = 1; i < exercisesMade.length; i++) {
             if (exercisesMade[i]) {
                 doneExercisesN++;
-                doneExercisesString += (i + 1) + " ";
+                doneExercisesString += (i) + " ";
             }
         }
-        String doneExercisesAmount = "tehtyjä tehtäviä yhteensä: " + doneExercisesN;
+        String doneExercisesAmount = "tehtyjä tehtäviä yhteensä: " + 
+                doneExercisesN + " (maksimi " + maxExercises + ")";
         String doneExercisesEach = "tehdyt tehtävät: " + doneExercisesString;
         return weekString + ": " + doneExercisesAmount + ", " + timeSpent + 
                 ", " + doneExercisesEach;
