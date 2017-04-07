@@ -3,16 +3,23 @@ package ohtu;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import org.junit.After;
 import static org.junit.Assert.*;
+import cucumber.api.java.Before;
+import cucumber.api.java.After;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 public class Stepdefs {
-    WebDriver driver = new ChromeDriver();
+    WebDriver driver;
     String baseUrl = "http://localhost:4567";
+
+    @Before
+    public void setUp() {
+        System.setProperty("webdriver.chrome.driver", "/home/pqkallio/chromedriver/chromedriver");
+        this.driver = new ChromeDriver();
+    }
     
     @Given("^login is selected$")
     public void login_selected() throws Throwable {
@@ -44,6 +51,11 @@ public class Stepdefs {
     @When("^correct username \"([^\"]*)\" and incorrect password \"([^\"]*)\" are given$")
     public void username_and_incorrect_password_are_given(String username, String password) throws Throwable {
         logInWith(username, password);
+    }
+    
+    @When("^a nonexistent username \"([^\"]*)\" and password \"([^\"]*)\" are given$")
+    public void a_nonexistent_username_and_password_are_given(String usernam, String password) throws Throwable {
+        logInWith(usernam, password);
     }
     
     @Then("^user is logged in$")
